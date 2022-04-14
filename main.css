@@ -1,0 +1,135 @@
+@import url(https://fonts.googleapis.com/css?family=Lato);
+@import url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.css);
+
+}
+*,*::before,*::after{
+  box-sizing:border-box;
+  padding:0;
+  margin:0;
+  background:none;
+  text-decoration:none;
+  outline:none;
+  font-family:inherit;
+  font-size:inherit;
+  line-height:inherit;
+  font-weight:400;
+  color:inherit;
+  -webkit-font-smoothing:antialiased}
+:root{
+  font-family:"Iowan Old Style",Palatino,Palatino Linotype,"Palatino LT STD",Garamond,Baskerville,Baskerville Old Face,Hoefler Text,Times New Roman,serif;
+  font-weight:400;
+  font-size:24px}
+@media (min-width: 600px){:root{font-size:28px}}
+@media (min-width: 1000px){:root{font-size:30px}}
+@media (min-width: 1400px){:root{font-size:34px}}
+body{
+  font-size:inherit;
+  line-height:inherit;
+  background:#fff;
+  color:#404040;/*overflow:auto;background:linear-gradient(to bottom, whitesmoke 65vh, white 65vh, white)*/}
+a{
+  color:currentColor}
+.text-container{
+  padding:0 1rem 5rem;
+  height:100%}
+.text{
+  max-width:18rem;
+  margin:0 auto}
+.text a{
+  background:linear-gradient(to top, rgba(255,235,59,0.5) 0.5em, transparent 0.5em)}
+.text h1{
+  font-size:.8666666667rem;
+  font-family:inherit;
+  line-height:1.3rem;
+  padding-bottom:.35rem;
+  padding-top:.35rem;
+  font-weight:600;
+  margin-bottom:1rem}
+.text h2{
+  font-size:.7583333334rem;
+  font-family:inherit;
+  line-height:1.3rem;
+  padding-top:.35rem;
+  padding-bottom:.35rem;
+  font-weight:600}
+.text h3{
+  font-size:.64rem;
+  font-family:inherit;
+  line-height:1.3rem;
+  padding-top:.35rem;
+  padding-bottom:.35rem;
+  font-weight:600}
+.text p,.text li{
+  font-size:.5416666667rem;
+  font-family:inherit;
+  line-height:1rem}
+.text p{
+  margin-bottom:.5rem;
+  max-width: 70vw}
+.text ul{
+  list-style:none;
+  margin-bottom:.5rem}
+
+img {
+  width: auto;
+  height: auto;
+  max-width: 25vw;
+}
+.footer-social-icons {
+    /*width: 350px;*/
+    display:block;
+    margin: 0 auto;
+}
+.social-icon {
+    color: #0d0d0d;
+}
+ul.social-icons {
+    margin-top: 30px;
+}
+.social-icons li {
+    vertical-align: top;
+    display: inline;
+    height: 100px;
+}
+.social-icons a {
+    color: #0d0d0d;
+    text-decoration: none;
+}
+.fa-twitter {
+    padding:10px 12px;
+    -o-transition:.5s;
+    -ms-transition:.5s;
+    -moz-transition:.5s;
+    -webkit-transition:.5s;
+    transition: .5s;
+    background-color: #fff;
+}
+.fa-twitter:hover {
+    color: #fff;
+    background-color: #00aced;
+}
+.fa-rss {
+    padding:10px 14px;
+    -o-transition:.5s;
+    -ms-transition:.5s;
+    -moz-transition:.5s;
+    -webkit-transition:.5s;
+    transition: .5s;
+    background-color: #fff;
+}
+.fa-rss:hover {
+    background-color: #eb8231;
+}
+.fa-linkedin {
+    padding:10px 14px;
+    -o-transition:.5s;
+    -ms-transition:.5s;
+    -moz-transition:.5s;
+    -webkit-transition:.5s;
+    transition: .5s;
+    background-color: #fff;
+}
+.fa-linkedin:hover {
+    color: #fff;
+    background-color: #0073a4;
+}
