@@ -109,7 +109,7 @@
                 <!-- Social -->
                 <div class="content-row">
                     <a href="https://twitter.com/meksikanpijja" target="_blank" class="content-link">
-                        <span class="label">TWITTER</span>
+                        <span class="label">X</span>
                     </a>
                 </div>
 
@@ -122,116 +122,340 @@
             </div>
 
             <div id="ascii" class="ascii-container">
-                <pre id="cube-canvas"></pre>
+                <canvas id="diya-canvas"></canvas>
             </div>
 
         </div>
     </div>
 
     <script>
-        // Spinning Cube ASCII Animation - only spins on hover
+        // Animated ASCII Diya - Smoke default, flame on hover
         (function() {
-            const canvas = document.getElementById('cube-canvas');
+            const canvas = document.getElementById('diya-canvas');
             const container = document.getElementById('ascii');
             if (!canvas) return;
+            const ctx = canvas.getContext('2d');
 
-            const width = 160;
-            const height = 160;
-            let A = 0, B = 0, C = 0;
-            let isHovering = false;
+            const cols = 60;
+            const rows = 70;
+            const charWidth = 8;
+            const charHeight = 12;
 
-            const cubeWidth = 60;
-            const distanceFromCam = 100;
-            const K1 = 80;
+            canvas.width = cols * charWidth;
+            canvas.height = rows * charHeight;
+            ctx.font = '11px monospace';
+            ctx.textBaseline = 'top';
 
-            let zBuffer = new Array(width * height);
-            let buffer = new Array(width * height);
+            const centerX = Math.floor(cols / 2);
+            const diyaTop = rows - 10;
+            const flameBaseY = diyaTop - 1;
+            const maxFlameHeight = 48;
 
-            function calculateX(i, j, k) {
-                return j * Math.sin(A) * Math.sin(B) * Math.cos(C) - k * Math.cos(A) * Math.sin(B) * Math.cos(C) +
-                    j * Math.cos(A) * Math.sin(C) + k * Math.sin(A) * Math.sin(C) + i * Math.cos(B) * Math.cos(C);
+            const PHI = 1.618033988749;
+            const PI = Math.PI;
+            const E = Math.E;
+
+            // State machine
+            let state = 'smoking'; // 'smoking' | 'growing' | 'burning' | 'dying'
+            let flameScale = 0;
+            let touchActive = false;
+
+            // Transition speeds
+            const GROW_SPEED = 0.045;
+            const DIE_SPEED = 0.035;
+
+            function noise(x, y, t) {
+                const a = Math.sin(x * 0.134 * PHI + t * 0.67) * Math.cos(y * 0.089 * E + t * 0.53);
+                const b = Math.sin((x + y) * 0.072 * PI + t * 0.91) * Math.sin(x * 0.103 - t * 0.71 * PHI);
+                const c = Math.cos(y * 0.156 + t * 0.43 * E) * Math.sin((x - y) * 0.094 + t * 0.82);
+                const d = Math.sin(x * 0.078 * E + y * 0.112 + t * 0.59 * PI);
+                return (a + b + c + d) * 0.25 * 0.5 + 0.5;
             }
 
-            function calculateY(i, j, k) {
-                return j * Math.cos(A) * Math.cos(C) + k * Math.sin(A) * Math.cos(C) -
-                    j * Math.sin(A) * Math.sin(B) * Math.sin(C) + k * Math.cos(A) * Math.sin(B) * Math.sin(C) -
-                    i * Math.cos(B) * Math.sin(C);
-            }
+            // Draw static diya (only once)
+            function drawDiya() {
+                for (let y = diyaTop; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        let char = '';
+                        let color = '';
+                        const dx = x - centerX;
+                        const r = y - diyaTop;
 
-            function calculateZ(i, j, k) {
-                return k * Math.cos(A) * Math.cos(B) - j * Math.sin(A) * Math.cos(B) + i * Math.sin(B);
-            }
+                        if (r === 0) {
+                            if (Math.abs(dx) <= 1) { char = '|'; color = '#4E342E'; }
+                            else if (Math.abs(dx) <= 14) { char = '~'; color = '#3E2723'; }
+                        }
+                        else if (r === 1) {
+                            if (Math.abs(dx) <= 16) {
+                                if (Math.abs(dx) >= 15) char = dx > 0 ? ')' : '(';
+                                else char = (Math.abs(dx) % 3 === 0) ? 'o' : '-';
+                                color = '#E65100';
+                            }
+                        }
+                        else if (r === 2) {
+                            if (Math.abs(dx) <= 18) {
+                                if (Math.abs(dx) >= 17) char = dx > 0 ? '\\' : '/';
+                                else if (Math.abs(dx) >= 15) char = dx > 0 ? ')' : '(';
+                                else char = '=';
+                                color = '#BF360C';
+                            }
+                        }
+                        else if (r === 3) {
+                            if (Math.abs(dx) <= 17) {
+                                if (Math.abs(dx) >= 16) char = dx > 0 ? '\\' : '/';
+                                else if (Math.abs(dx) >= 13) char = dx > 0 ? ')' : '(';
+                                else char = '-';
+                                color = '#A1350C';
+                            }
+                        }
+                        else if (r === 4) {
+                            if (Math.abs(dx) <= 15) {
+                                if (Math.abs(dx) >= 14) char = dx > 0 ? '\\' : '/';
+                                else if (Math.abs(dx) >= 11) char = dx > 0 ? ')' : '(';
+                                else char = '~';
+                                color = '#8D3212';
+                            }
+                        }
+                        else if (r === 5) {
+                            if (Math.abs(dx) <= 13) {
+                                if (Math.abs(dx) >= 12) char = dx > 0 ? '\\' : '/';
+                                else if (Math.abs(dx) >= 9) char = dx > 0 ? ')' : '(';
+                                else char = '=';
+                                color = '#6D2912';
+                            }
+                        }
+                        else if (r === 6) {
+                            if (Math.abs(dx) <= 10) {
+                                if (Math.abs(dx) >= 9) char = dx > 0 ? '\\' : '/';
+                                else char = '-';
+                                color = '#5D1F0D';
+                            }
+                        }
+                        else if (r === 7) {
+                            if (Math.abs(dx) <= 8) {
+                                if (Math.abs(dx) >= 7) char = dx > 0 ? ')' : '(';
+                                else char = '_';
+                                color = '#4A1A0A';
+                            }
+                        }
+                        else if (r === 8) {
+                            if (Math.abs(dx) <= 5) { char = '='; color = '#3E1408'; }
+                        }
 
-            function calculateForSurface(cubeX, cubeY, cubeZ, ch) {
-                let x = calculateX(cubeX, cubeY, cubeZ);
-                let y = calculateY(cubeX, cubeY, cubeZ);
-                let z = calculateZ(cubeX, cubeY, cubeZ) + distanceFromCam;
-
-                let ooz = 1 / z;
-
-                let xp = Math.floor(width / 2 + K1 * ooz * x);
-                let yp = Math.floor(height / 2 - K1 * ooz * y);
-
-                let idx = xp + yp * width;
-                if (idx >= 0 && idx < width * height && xp >= 0 && xp < width && yp >= 0 && yp < height) {
-                    if (ooz > zBuffer[idx]) {
-                        zBuffer[idx] = ooz;
-                        buffer[idx] = ch;
+                        if (char && color) {
+                            ctx.fillStyle = color;
+                            ctx.fillText(char, x * charWidth, y * charHeight);
+                        }
                     }
                 }
             }
 
-            function renderFrame() {
-                // Clear buffers
-                for (let i = 0; i < width * height; i++) {
-                    buffer[i] = ' ';
-                    zBuffer[i] = 0;
-                }
+            // Draw rising smoke wisps
+            function drawSmoke(t) {
+                const smokeChars = ["'", '.', ',', '`', '~'];
+                const smokeColors = ['#888', '#777', '#666', '#999'];
 
-                const halfWidth = cubeWidth / 2;
+                // Draw 3 smoke wisps at different phases
+                for (let wisp = 0; wisp < 3; wisp++) {
+                    const phase = wisp * 2.1;
+                    const speed = 0.8 + wisp * 0.15;
 
-                // Draw all 6 faces
-                for (let cubeX = -halfWidth; cubeX < halfWidth; cubeX += 0.6) {
-                    for (let cubeY = -halfWidth; cubeY < halfWidth; cubeY += 0.6) {
-                        calculateForSurface(cubeX, cubeY, -halfWidth, '.');
-                        calculateForSurface(halfWidth, cubeY, cubeX, '#');
-                        calculateForSurface(-halfWidth, cubeY, -cubeX, '@');
-                        calculateForSurface(-cubeX, cubeY, halfWidth, '$');
-                        calculateForSurface(cubeX, -halfWidth, -cubeY, '~');
-                        calculateForSurface(cubeX, halfWidth, cubeY, ';');
+                    for (let i = 0; i < 12; i++) {
+                        const age = (t * speed + phase + i * 0.3) % 4;
+                        const y = flameBaseY - 2 - age * 10;
+
+                        if (y < 5 || y >= flameBaseY) continue;
+
+                        // Horizontal drift
+                        const drift = Math.sin(t * 0.5 + phase + i * 0.5) * 2 +
+                                     Math.sin(t * 0.3 * PHI + i) * 1.5;
+                        const x = centerX + drift;
+
+                        // Fade out as it rises
+                        const opacity = Math.max(0, 1 - age / 4);
+                        if (opacity < 0.1) continue;
+
+                        const charIdx = Math.floor((t * 2 + i + wisp) % smokeChars.length);
+                        const colorIdx = Math.floor((i + wisp) % smokeColors.length);
+
+                        // Apply opacity via color
+                        const baseColor = smokeColors[colorIdx];
+                        const r = parseInt(baseColor.slice(1, 2), 16) * 17;
+                        const g = parseInt(baseColor.slice(2, 3), 16) * 17;
+                        const b = parseInt(baseColor.slice(3, 4), 16) * 17;
+                        const color = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+
+                        ctx.fillStyle = color;
+                        ctx.fillText(smokeChars[charIdx], x * charWidth, y * charHeight);
                     }
                 }
+            }
 
-                // Build output string
-                let output = '';
-                for (let k = 0; k < height; k++) {
-                    for (let j = 0; j < width; j++) {
-                        output += buffer[k * width + j];
+            // Draw flame with scale - candle-like shape
+            function drawFlame(t, scale) {
+                const flameHeight = maxFlameHeight * scale;
+                const maxWidth = 7 * scale;
+
+                // Color shift during dying (more red)
+                const dyingShift = state === 'dying' ? (1 - scale) : 0;
+
+                // Gentle, hypnotic sway - slower and smoother
+                const swayBase = Math.sin(t * 0.4) * 0.8 + Math.sin(t * 0.7 * PHI) * 0.5;
+
+                for (let y = 0; y < flameBaseY; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        let char = '';
+                        let color = '';
+                        const dx = x - centerX;
+                        const distFromBase = flameBaseY - y;
+
+                        if (distFromBase <= flameHeight && distFromBase > 0 && flameHeight > 0) {
+                            const normalizedY = distFromBase / flameHeight;
+
+                            const n1 = noise(x * 0.5, y * 0.3, t * 1.8);
+                            const n2 = noise(x * 0.3 + 100, y * 0.2 + 50, t * 1.4);
+                            const flicker = (n1 + n2) / 2;
+
+                            // Candle flame shape: narrow at bottom, bulge in middle, point at top
+                            // Using a custom curve: sin-based bulge
+                            let shapeWidth;
+                            if (normalizedY < 0.15) {
+                                // Rounded narrow bottom (near wick)
+                                shapeWidth = 0.4 + normalizedY * 3;
+                            } else if (normalizedY < 0.45) {
+                                // Widening bulge
+                                shapeWidth = 0.85 + Math.sin((normalizedY - 0.15) * PI / 0.3) * 0.15;
+                            } else {
+                                // Taper to point
+                                const taperStart = 0.45;
+                                const taperProgress = (normalizedY - taperStart) / (1 - taperStart);
+                                shapeWidth = 1.0 * Math.pow(1 - taperProgress, 0.7);
+                            }
+
+                            // Gentle sway - more at tip, hypnotic motion
+                            const sway = (swayBase + Math.sin(t * 0.6 + normalizedY * 1.5) * 0.4)
+                                        * normalizedY * 2.5 * scale;
+                            const adjustedDx = dx - sway;
+
+                            const breathe = 0.92 + flicker * 0.16;
+                            const flameWidth = maxWidth * shapeWidth * breathe;
+
+                            const dist = Math.abs(adjustedDx) / Math.max(flameWidth, 0.01);
+
+                            if (dist < 1) {
+                                const idx = Math.floor((flicker * 10 + t * 2.5 + y * 0.1) % 5);
+
+                                // Colors shift redder when dying
+                                if (dist < 0.18 && normalizedY > 0.08 && normalizedY < 0.6) {
+                                    char = ['|', 'I', '|', 'l', '|'][idx];
+                                    color = dyingShift > 0.3 ? '#FFCC80' : '#FFFEF8';
+                                }
+                                else if (dist < 0.38 && normalizedY < 0.75) {
+                                    char = [')', '(', '|', '/', '\\'][idx];
+                                    color = dyingShift > 0.3 ? '#FFA726' : '#FFEB3B';
+                                }
+                                else if (dist < 0.58) {
+                                    char = [')', '(', '/', '\\', 'o'][idx];
+                                    color = dyingShift > 0.3 ? '#FF7043' : '#FFC107';
+                                }
+                                else if (dist < 0.78) {
+                                    char = [':', '.', "'", ',', '`'][idx];
+                                    color = dyingShift > 0.3 ? '#E64A19' : '#FF9800';
+                                }
+                                else {
+                                    char = ['.', "'", '`', ',', '.'][idx];
+                                    color = dyingShift > 0.3 ? '#BF360C' : '#FF5722';
+                                }
+
+                                // Pointed tip - wispy
+                                if (normalizedY > 0.78) {
+                                    const tipN = noise(x * 2, y * 3, t * 2.5);
+                                    if (normalizedY > 0.9) {
+                                        if (tipN > 0.32 && dist < 0.5) {
+                                            char = ['.', "'", '`', '^', "'"][Math.floor(tipN * 5) % 5];
+                                            color = dyingShift > 0.3 ? '#FF5722' : '#FFAB00';
+                                        } else {
+                                            char = '';
+                                        }
+                                    } else if (dist < 0.22) {
+                                        char = ['|', "'", '`', '|'][idx % 4];
+                                        color = dyingShift > 0.3 ? '#FF8A65' : '#FFD54F';
+                                    }
+                                }
+
+                                // Rounded bottom near wick
+                                if (normalizedY < 0.1 && dist > 0.6) {
+                                    char = ['.', ',', "'"][idx % 3];
+                                    color = dyingShift > 0.3 ? '#E64A19' : '#FF9800';
+                                }
+                            }
+                        }
+
+                        if (char && color) {
+                            ctx.fillStyle = color;
+                            ctx.fillText(char, x * charWidth, y * charHeight);
+                        }
                     }
-                    output += '\n';
+                }
+            }
+
+            function renderFrame(timestamp) {
+                const t = timestamp * 0.001;
+
+                // State transitions
+                if (state === 'growing') {
+                    flameScale = Math.min(1, flameScale + GROW_SPEED);
+                    if (flameScale >= 1) state = 'burning';
+                }
+                else if (state === 'dying') {
+                    flameScale = Math.max(0, flameScale - DIE_SPEED);
+                    if (flameScale <= 0) state = 'smoking';
                 }
 
-                canvas.textContent = output;
+                // Clear flame/smoke area
+                ctx.clearRect(0, 0, canvas.width, flameBaseY * charHeight);
 
-                // Only rotate when hovering
-                if (isHovering) {
-                    A += 0.008;
-                    B += 0.006;
-                    C += 0.004;
+                // Draw based on state
+                if (state === 'smoking') {
+                    drawSmoke(t);
+                } else {
+                    drawFlame(t, flameScale);
                 }
 
+                // Always keep animating
                 requestAnimationFrame(renderFrame);
             }
 
+            // Draw static diya on load
+            drawDiya();
+
+            // Start animation (smoke by default)
+            requestAnimationFrame(renderFrame);
+
+            // Mouse events
             container.addEventListener('mouseenter', function() {
-                isHovering = true;
+                if (state === 'smoking' || state === 'dying') {
+                    state = 'growing';
+                }
             });
 
             container.addEventListener('mouseleave', function() {
-                isHovering = false;
+                if (state === 'burning' || state === 'growing') {
+                    state = 'dying';
+                }
             });
 
-            renderFrame();
+            // Touch events for mobile
+            container.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                if (!touchActive && (state === 'smoking' || state === 'dying')) {
+                    touchActive = true;
+                    state = 'growing';
+                } else if (touchActive && (state === 'burning' || state === 'growing')) {
+                    touchActive = false;
+                    state = 'dying';
+                }
+            }, { passive: false });
         })();
     </script>
 
